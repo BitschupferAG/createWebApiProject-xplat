@@ -1,0 +1,2 @@
+#!/bin/sh
+exec dotnet run "$(dirname "$0")/create.cs" -- Web "$@"

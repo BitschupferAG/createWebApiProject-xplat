@@ -1,0 +1,5 @@
+*.cmd -text
+*.sh text eol=lf
+createWebApi text eol=lf
+createMinApi text eol=lf
+createAllApi text eol=lf

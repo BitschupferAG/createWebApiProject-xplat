@@ -1,0 +1,12 @@
+<Window x:Class="{{NAMESPACE}}.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{{NAMESPACE}}" Height="400" Width="600"
+        Loaded="Window_Loaded">
+  <DockPanel Margin="10">
+    <Button DockPanel.Dock="Top" Content="Backend testen ({{ROUTE}})" Padding="8,4"
+            HorizontalAlignment="Left" Click="BtnTest_Click" />
+    <TextBox x:Name="txtResult" Margin="0,10,0,0" IsReadOnly="True" TextWrapping="Wrap"
+             VerticalScrollBarVisibility="Auto" FontFamily="Consolas" />
+  </DockPanel>
+</Window>
