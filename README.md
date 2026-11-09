@@ -46,16 +46,16 @@ Den Installer muss man nicht verwenden. Wer .NET 10 und dotnet-ef 10 schon hat, 
 ## Verwendung
 
 ```
-createWebApi solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
-createMinApi solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
-createAllApi solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
+createWebApi-xplat solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
+createMinApi-xplat solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
+createAllApi-xplat solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
 ```
 
 | Befehl         | erzeugt                                   |
 |----------------|-------------------------------------------|
-| `createWebApi` | Backend mit Controllern                   |
-| `createMinApi` | Backend mit Minimal API                   |
-| `createAllApi` | Backend mit Minimal API **und** Controllern |
+| `createWebApi-xplat` | Backend mit Controllern                   |
+| `createMinApi-xplat` | Backend mit Minimal API                   |
+| `createAllApi-xplat` | Backend mit Minimal API **und** Controllern |
 
 | Parameter      | optional | Bedeutung |
 |----------------|:--------:|-----------|
@@ -69,19 +69,19 @@ createAllApi solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]
 
 ```bash
 # Backend mit Controllern, ohne Datenbank, im aktuellen Ordner
-createWebApi MyBackend .
+createWebApi-xplat MyBackend .
 
 # Minimal API mit SQLite-Datenbank, Endpoint für die Tabelle Products
-createMinApi NorthwindManager ~/Projekte ~/Downloads/Northwnd.sqlite Products
+createMinApi-xplat NorthwindManager ~/Projekte ~/Downloads/Northwnd.sqlite Products
 
 # Code First: neue SQLite-Datenbank Dummy.sqlite mit Tabelle Dummies
-createAllApi DummyBackend . Dummy.sqlite null
+createAllApi-xplat DummyBackend . Dummy.sqlite null
 
 # Windows: SQL-Server-Datenbank (.mdf) + WPF-Client
-createWebApi NorthwindManager C:\Temp D:\Temp\Northwnd.mdf Categories true
+createWebApi-xplat NorthwindManager C:\Temp D:\Temp\Northwnd.mdf Categories true
 ```
 
-Ohne Datenbank, aber mit WPF-Client, übergibst du leere Werte: `createWebApi MyBackend . "" "" true`
+Ohne Datenbank, aber mit WPF-Client, übergibst du leere Werte: `createWebApi-xplat MyBackend . "" "" true`
 
 Am Ende wird die Solution gebaut. Nach **Enter** startet das Backend:
 
@@ -124,7 +124,7 @@ Hilfsmethoden in `ExtensionMethods.cs`:
 
 | Bereich | |
 |---|---|
-| Aufruf | `createWebApi` / `createMinApi` / `createAllApi`, gleiche Parameter in gleicher Reihenfolge |
+| Parameter | gleiche Parameter in gleicher Reihenfolge, Web/Min/All-Varianten |
 | Ports | http `5000`, https `7001`, zwei Profile in `launchSettings.json` |
 | Projektstruktur | `.slnx`-Solution, Ordner `Dtos`, `Services`, `Controllers`, `Maps`, `Logging` |
 | Features | Swagger, CORS ohne Einschränkungen, eigener Konsolen-Logger, Log-Level in `appsettings.json`, RestClientGenerator / `_requests.http` |
@@ -138,6 +138,7 @@ Hilfsmethoden in `ExtensionMethods.cs`:
 
 | Bereich | Original | xplat |
 |---|---|---|
+| Befehlsname | `createWebApi` / `createMinApi` / `createAllApi` | `createWebApi-xplat` / `createMinApi-xplat` / `createAllApi-xplat`, damit es keine Verwechslung mit dem Original gibt und beide nebeneinander installiert sein können |
 | Code | Windows-Batch (`.bat`) + `ReplaceInFile.exe` + `ExtractDbName.exe` | **komplett neu geschrieben**: eine C#-Datei (`create.cs`), läuft mit `dotnet run` |
 | Betriebssysteme | nur Windows | **Windows, macOS, Linux** |
 | Installation | Repo klonen, PATH selbst setzen | **Einzeiler-Installer**, der auch .NET 10 und dotnet-ef installiert |
@@ -154,8 +155,8 @@ Hilfsmethoden in `ExtensionMethods.cs`:
 | Datei | Zweck |
 |---|---|
 | `create.cs` | die gesamte Logik (.NET-10-*file-based app*) |
-| `createWebApi`, `createMinApi`, `createAllApi` | Startskripte für macOS/Linux |
-| `createWebApi.cmd`, … | Startskripte für Windows |
+| `createWebApi-xplat`, `createMinApi-xplat`, `createAllApi-xplat` | Startskripte für macOS/Linux |
+| `createWebApi-xplat.cmd`, … | Startskripte für Windows |
 | `templates/` | Vorlagen der erzeugten Dateien. Platzhalter haben die Form `{{NAME}}`. |
 | `install.sh`, `install.ps1` | Installer |
 

@@ -62,4 +62,4 @@ foreach ($p in $newPaths) {
 [Environment]::SetEnvironmentVariable('Path', ($userPath -join ';'), 'User')
 
 Write-Host "`nFertig! " -ForegroundColor Green -NoNewline
-Write-Host "Öffne ein neues Terminal und probiere:`n  createWebApi MyBackend ."
+Write-Host "Öffne ein neues Terminal und probiere:`n  createWebApi-xplat MyBackend ."

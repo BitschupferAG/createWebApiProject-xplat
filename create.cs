@@ -2,7 +2,7 @@
 // createWebApiProject-xplat
 // Erzeugt eine ASP.NET Core Web-API-Solution – auf Windows, macOS und Linux.
 // Inspiriert von https://gitlab.com/rgrueneis/createwebapiproject (nur Windows), von Grund auf neu geschrieben.
-// Aufruf über die Startskripte createWebApi / createMinApi / createAllApi.
+// Aufruf über die Startskripte createWebApi-xplat / createMinApi-xplat / createAllApi-xplat.
 
 using System.Diagnostics;
 using System.Text.Json;
@@ -277,7 +277,7 @@ static class Generator
 
     static void PrintUsage(string type)
     {
-        Say(ConsoleColor.Magenta, $"Aufruf: create{type}Api solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]");
+        Say(ConsoleColor.Magenta, $"Aufruf: create{type}Api-xplat solutionName [targetFolder] [pathToDbFile] [tableName] [addWPF]");
         Console.WriteLine("""
               solutionName  Name der Solution, des Projekts und des Ordners
               targetFolder  Ordner, in dem die Solution angelegt wird (Standard: .)

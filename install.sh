@@ -44,7 +44,7 @@ trap 'rm -rf "$TMP"' EXIT
 curl -fsSL "https://github.com/$REPO/archive/refs/heads/main.tar.gz" | tar -xz -C "$TMP"
 rm -rf "$INSTALL_DIR"
 mv "$TMP/createWebApiProject-xplat-main" "$INSTALL_DIR"
-chmod +x "$INSTALL_DIR/createWebApi" "$INSTALL_DIR/createMinApi" "$INSTALL_DIR/createAllApi"
+chmod +x "$INSTALL_DIR/createWebApi-xplat" "$INSTALL_DIR/createMinApi-xplat" "$INSTALL_DIR/createAllApi-xplat"
 
 # 4. PATH in Shell-Konfiguration eintragen (alter Block wird ersetzt)
 BLOCK="$MARK_START
@@ -63,4 +63,4 @@ for rc in "${RCS[@]}"; do
   info "PATH eingetragen in $rc"
 done
 
-printf '\n\033[92mFertig!\033[0m Öffne ein neues Terminal und probiere:\n  createWebApi MyBackend .\n'
+printf '\n\033[92mFertig!\033[0m Öffne ein neues Terminal und probiere:\n  createWebApi-xplat MyBackend .\n'
