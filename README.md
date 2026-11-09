@@ -176,6 +176,7 @@ Ein vom Installer installiertes .NET SDK liegt in `~/.dotnet` und kann bei Bedar
 
 - macOS (Apple Silicon), .NET SDK 10.0.402: alle drei Varianten, mit und ohne SQLite, Code First
 - Linux (Docker `mcr.microsoft.com/dotnet/sdk:10.0`): dieselben Szenarien
+- Installer `install.sh`: frisches Ubuntu 24.04 ohne .NET (installiert SDK, dotnet-ef, PATH; zweiter Lauf aktualisiert ohne doppelte Einträge) und macOS mit leerem HOME
 - Windows: **noch nicht auf einem echten Windows-Rechner getestet.** Die WPF-Vorlage kompiliert, aber `.mdf`/LocalDB und `install.ps1` sind ungetestet. Feedback und Issues sind willkommen.
 
 ## Lizenz
