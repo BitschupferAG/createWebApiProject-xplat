@@ -12,11 +12,7 @@ Es nimmt einem viel Routinearbeit ab. Weil es aus Windows-Batch-Dateien und Wind
 
 Dieses Projekt löst genau dieses Problem: Es erzeugt dieselbe Art von Projekt mit derselben Aufrufsyntax, läuft aber auf allen drei Betriebssystemen.
 
-> **Danke, Prof. Grüneis!** Die Idee, der Funktionsumfang und die Aufrufsyntax stammen aus seinem Original. Dieses Repo ist nur eine plattformunabhängige Neuumsetzung dieser Idee. Wer Windows verwendet und das Original kennt, kann gerne weiter das Original nehmen.
-
-### Kein übernommener Code
-
-Das Original-Repo enthält keine Lizenz. Deshalb wurde **keine einzige Zeile Code und keine Vorlage** daraus kopiert. Alles in diesem Repo ist neu geschrieben. Übernommen wurde nur das *Verhalten*, das im README des Originals beschrieben ist: Parameter, Ports, Ordnerstruktur und die Liste der Hilfsfunktionen.
+> **Danke, Prof. Grüneis!** Die Idee, der Funktionsumfang und die Aufrufsyntax stammen aus dem Original. Dieses Repo ist nur eine plattformunabhängige Neuumsetzung dieser Idee. Wer Windows verwendet und das Original kennt, kann gerne weiter das Original nehmen.
 
 Die erzeugten Projekte referenzieren die öffentlichen NuGet-Pakete `GrueneisR.RestClientGenerator` und `GrueneisR.SignalRAnalyzer` von Prof. Grüneis, damit sie zum Unterricht passen. Diese Pakete werden **nicht** mitgeliefert. `dotnet` lädt sie beim Build ganz normal von nuget.org.
 
