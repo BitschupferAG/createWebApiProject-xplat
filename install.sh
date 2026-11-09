@@ -37,13 +37,18 @@ else
   dotnet tool install -g dotnet-ef --version '10.*'
 fi
 
-# 3. Tool herunterladen
-info "Lade createWebApiProject-xplat nach $INSTALL_DIR ..."
+# 3. Neueste Release-Version herunterladen (Redirect statt GitHub-API: kein Rate-Limit bei vielen Schülern hinter einer IP)
+LATEST=$(curl -fsSLo /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest") || fail "GitHub nicht erreichbar."
+TAG=${LATEST##*/}
+case "$TAG" in v*) ;; *) fail "Keine Release-Version auf GitHub gefunden." ;; esac
+info "Lade createWebApiProject-xplat $TAG nach $INSTALL_DIR ..."
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
-curl -fsSL "https://github.com/$REPO/archive/refs/heads/main.tar.gz" | tar -xz -C "$TMP"
+mkdir "$TMP/src"
+curl -fsSL "https://github.com/$REPO/archive/refs/tags/$TAG.tar.gz" | tar -xz -C "$TMP/src" --strip-components=1
 rm -rf "$INSTALL_DIR"
-mv "$TMP/createWebApiProject-xplat-main" "$INSTALL_DIR"
+mv "$TMP/src" "$INSTALL_DIR"
+echo "$TAG" > "$INSTALL_DIR/VERSION"
 chmod +x "$INSTALL_DIR/createWebApi-xplat" "$INSTALL_DIR/createMinApi-xplat" "$INSTALL_DIR/createAllApi-xplat"
 
 # 4. PATH in Shell-Konfiguration eintragen (alter Block wird ersetzt)

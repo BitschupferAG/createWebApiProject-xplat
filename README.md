@@ -36,12 +36,23 @@ Der Installer
 
 1. installiert das **.NET 10 SDK**, falls es fehlt oder zu alt ist (mit Microsofts offiziellem `dotnet-install`-Skript, nach `~/.dotnet`),
 2. installiert oder aktualisiert **dotnet-ef 10**,
-3. lädt dieses Tool nach `~/.createWebApiProject-xplat`,
+3. lädt die **neueste Release-Version** dieses Tools nach `~/.createWebApiProject-xplat`,
 4. trägt alles in den **PATH** ein: bei macOS/Linux in `~/.zshrc` bzw. `~/.bashrc`, bei Windows im Benutzer-PATH.
 
-Danach **ein neues Terminal öffnen**, und schon geht's los. Zum Aktualisieren den Installer einfach noch einmal ausführen.
+Danach **ein neues Terminal öffnen**, und schon geht's los.
 
-Den Installer muss man nicht verwenden. Wer .NET 10 und dotnet-ef 10 schon hat, kann das Repo auch einfach klonen und den Ordner selbst in den PATH aufnehmen.
+Den Installer muss man nicht verwenden. Wer .NET 10 und dotnet-ef 10 schon hat, kann das Repo auch einfach klonen und den Ordner selbst in den PATH aufnehmen. Ein Klon zeigt bei `--version` dann `dev` an und sucht nicht nach Updates, man aktualisiert ihn mit `git pull`.
+
+## Update
+
+```bash
+createWebApi-xplat --update     # auf die neueste Version aktualisieren
+createWebApi-xplat --version    # installierte Version anzeigen
+```
+
+`--update` führt einfach den Installer der neuesten Version erneut aus. Dabei werden das Tool und dotnet-ef aktualisiert, .NET wird nur installiert, falls es fehlt. Unter Windows läuft das Update in einem eigenen PowerShell-Fenster.
+
+Das Tool sieht außerdem **höchstens einmal pro Tag** kurz nach, ob es eine neuere Version gibt, und zeigt dann einen Hinweis. Ohne Internet wird diese Prüfung einfach übersprungen.
 
 ## Verwendung
 
@@ -141,7 +152,7 @@ Hilfsmethoden in `ExtensionMethods.cs`:
 | Befehlsname | `createWebApi` / `createMinApi` / `createAllApi` | `createWebApi-xplat` / `createMinApi-xplat` / `createAllApi-xplat`, damit es keine Verwechslung mit dem Original gibt und beide nebeneinander installiert sein können |
 | Code | Windows-Batch (`.bat`) + `ReplaceInFile.exe` + `ExtractDbName.exe` | **komplett neu geschrieben**: eine C#-Datei (`create.cs`), läuft mit `dotnet run` |
 | Betriebssysteme | nur Windows | **Windows, macOS, Linux** |
-| Installation | Repo klonen, PATH selbst setzen | **Einzeiler-Installer**, der auch .NET 10 und dotnet-ef installiert |
+| Installation | Repo klonen, PATH selbst setzen | **Einzeiler-Installer**, der auch .NET 10 und dotnet-ef installiert, Update mit `--update` und Hinweis auf neue Versionen |
 | `.mdf` (SQL Server LocalDB) | ja | nur unter Windows (LocalDB gibt es nur dort). Auf macOS/Linux SQLite verwenden. |
 | WPF-Client | WPF + npm + OpenAPI-Generator (braucht Node.js und Java) | nur unter Windows; einfacher Client mit `HttpClient`, ohne npm/Java. Auf macOS/Linux wird er mit Hinweis übersprungen. |
 | Relative DB-Pfade | relativ zum Skript-Ordner | relativ zum **aktuellen** Ordner |
@@ -158,9 +169,21 @@ Hilfsmethoden in `ExtensionMethods.cs`:
 | `createWebApi-xplat`, `createMinApi-xplat`, `createAllApi-xplat` | Startskripte für macOS/Linux |
 | `createWebApi-xplat.cmd`, … | Startskripte für Windows |
 | `templates/` | Vorlagen der erzeugten Dateien. Platzhalter haben die Form `{{NAME}}`. |
-| `install.sh`, `install.ps1` | Installer |
+| `install.sh`, `install.ps1` | Installer. Sie schreiben die installierte Version in die Datei `VERSION`, die es im Repo selbst nicht gibt. |
 
 Der erste Aufruf dauert ein paar Sekunden länger, weil `dotnet` `create.cs` kompiliert. Danach kommt das Ergebnis aus dem Cache.
+
+### Neue Version veröffentlichen (für Maintainer)
+
+Installer und `--update` holen immer das **neueste GitHub-Release**. `main` darf also unfertig sein, bei den Mitschülern landet nur, was als Release veröffentlicht ist:
+
+```bash
+gh release create v1.2.0 --generate-notes
+```
+
+Die Versionsnummer kommt nur aus dem Tag (Format `vMAJOR.MINOR.PATCH`), im Code muss man nichts hochzählen.
+
+Ausnahme: Der Einzeiler im Abschnitt „Installation“ lädt `install.sh`/`install.ps1` direkt von `main`. Diese beiden Dateien müssen auf `main` deshalb immer funktionieren.
 
 ## Deinstallation
 

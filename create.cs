@@ -23,15 +23,21 @@ sealed class ToolError(string message) : Exception(message);
 
 static class Generator
 {
-    const string ToolVersion = "1.0.0";
+    const string Repo = "BitschupferAG/createWebApiProject-xplat";
     const int HttpPort = 5000;
     const int HttpsPort = 7001;
     const string SignalRAnalyzerVersion = "1.7.4";
     const string RestClientGeneratorVersion = "1.3.1";
     const string PkcsVersion = "10.0.13";
 
-    static readonly string TemplateDir = Path.Combine(
-        AppContext.GetData("EntryPointFileDirectoryPath") as string ?? AppContext.BaseDirectory, "templates");
+    static readonly string ToolDir =
+        AppContext.GetData("EntryPointFileDirectoryPath") as string ?? AppContext.BaseDirectory;
+    static readonly string TemplateDir = Path.Combine(ToolDir, "templates");
+
+    // Die Datei VERSION schreibt der Installer (Release-Tag). Ein git clone hat keine → "dev", keine Update-Prüfung.
+    static readonly string ToolVersion = File.Exists(Path.Combine(ToolDir, "VERSION"))
+        ? File.ReadAllText(Path.Combine(ToolDir, "VERSION")).Trim()
+        : "dev";
 
     public static int Run(string[] args)
     {
@@ -40,6 +46,15 @@ static class Generator
         var type = Arg(0) ?? "";
         if (type is not ("Web" or "Min" or "All"))
             throw new ToolError("Typ muss Web, Min oder All sein.");
+        switch (Arg(1))
+        {
+            case "--version":
+                Console.WriteLine($"createWebApiProject-xplat {ToolVersion}");
+                return 0;
+            case "--update":
+                return Update();
+        }
+        CheckForUpdate(type);
         if (Arg(1) is not { } solutionName)
         {
             PrintUsage(type);
@@ -285,7 +300,74 @@ static class Generator
               tableName     Tabelle für den Test-Endpoint; null = Code First mit Tabelle Dummies
               addWPF        true = zusätzlich WPF-Client (nur Windows)
             """);
+        Console.WriteLine($"""
+            Weitere Befehle:
+              create{type}Api-xplat --update    auf die neueste Version aktualisieren
+              create{type}Api-xplat --version   installierte Version anzeigen
+            """);
     }
+
+    // ---------------------------------------------------------------- Update
+
+    static int Update()
+    {
+        var tag = LatestReleaseTag(TimeSpan.FromSeconds(15))
+            ?? throw new ToolError("Die neueste Version konnte nicht ermittelt werden. Besteht eine Internetverbindung?");
+        Say(ConsoleColor.Cyan, $"Installiert: {ToolVersion}, neueste Version: {tag}. Starte den Installer ...");
+
+        if (OperatingSystem.IsWindows())
+        {
+            // Eigenes Fenster: der Installer ersetzt den Tool-Ordner, aus dem dieses .cmd gerade läuft.
+            Process.Start(new ProcessStartInfo("powershell",
+                $"-NoProfile -ExecutionPolicy Bypass -NoExit -Command \"irm https://raw.githubusercontent.com/{Repo}/{tag}/install.ps1 | iex\"")
+            { UseShellExecute = true });
+            Say(ConsoleColor.Cyan, "Das Update läuft im neuen PowerShell-Fenster.");
+            return 0;
+        }
+        Run(Environment.CurrentDirectory, "bash", "-c", $"curl -fsSL https://raw.githubusercontent.com/{Repo}/{tag}/install.sh | bash");
+        return 0;
+    }
+
+    // Höchstens einmal pro Tag kurz nachsehen; ohne Internet passiert nichts.
+    static void CheckForUpdate(string type)
+    {
+        if (ToolVersion == "dev") return;
+        var stamp = Path.Combine(ToolDir, ".update-check");
+        string? latest;
+        if (File.Exists(stamp) && File.GetLastWriteTimeUtc(stamp) > DateTime.UtcNow.AddDays(-1))
+        {
+            latest = File.ReadAllText(stamp).Trim();
+        }
+        else
+        {
+            latest = LatestReleaseTag(TimeSpan.FromSeconds(2));
+            if (latest is null) return;
+            try { File.WriteAllText(stamp, latest); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+        }
+        if (IsNewer(latest, ToolVersion))
+            Say(ConsoleColor.Yellow, $"Neue Version {latest} verfügbar (installiert: {ToolVersion}). Aktualisieren mit: create{type}Api-xplat --update\n");
+    }
+
+    // /releases/latest leitet auf /releases/tag/<tag> weiter – kein GitHub-API-Rate-Limit.
+    static string? LatestReleaseTag(TimeSpan timeout)
+    {
+        try
+        {
+            using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = timeout };
+            using var response = http.GetAsync($"https://github.com/{Repo}/releases/latest").GetAwaiter().GetResult();
+            var location = response.Headers.Location?.ToString() ?? "";
+            return location.Contains("/releases/tag/") ? location[(location.LastIndexOf('/') + 1)..] : null;
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        {
+            return null;
+        }
+    }
+
+    static bool IsNewer(string candidate, string current) =>
+        Version.TryParse(candidate.TrimStart('v'), out var a)
+        && Version.TryParse(current.TrimStart('v'), out var b)
+        && a > b;
 
     static void AddPackage(string dir, string package, string version) =>
         Run(dir, "dotnet", "add", "package", package, "-v", version, "-n");

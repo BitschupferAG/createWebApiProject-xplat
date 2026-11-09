@@ -41,15 +41,25 @@ if ((& dotnet tool list -g) -match '^dotnet-ef\s') {
 if ($LASTEXITCODE -ne 0) { throw 'dotnet-ef konnte nicht installiert werden.' }
 
 # 3. Tool herunterladen
-Info "Lade createWebApiProject-xplat nach $installDir ..."
+# Neueste Release-Version per Redirect ermitteln (statt GitHub-API: kein Rate-Limit bei vielen Schülern hinter einer IP)
+$req = [Net.WebRequest]::Create("https://github.com/$repo/releases/latest")
+$req.AllowAutoRedirect = $false
+$resp = $req.GetResponse()
+$tag = ($resp.Headers['Location'] -split '/')[-1]
+$resp.Close()
+if ($tag -notlike 'v*') { throw 'Keine Release-Version auf GitHub gefunden.' }
+
+Info "Lade createWebApiProject-xplat $tag nach $installDir ..."
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ([Guid]::NewGuid())
 New-Item -ItemType Directory $tmp | Out-Null
 try {
   $zip = Join-Path $tmp 'tool.zip'
-  Invoke-WebRequest "https://github.com/$repo/archive/refs/heads/main.zip" -OutFile $zip -UseBasicParsing
-  Expand-Archive $zip $tmp
+  Invoke-WebRequest "https://github.com/$repo/archive/refs/tags/$tag.zip" -OutFile $zip -UseBasicParsing
+  Expand-Archive $zip (Join-Path $tmp 'src')
+  $extracted = Get-ChildItem (Join-Path $tmp 'src') -Directory | Select-Object -First 1
   if (Test-Path $installDir) { Remove-Item $installDir -Recurse -Force }
-  Move-Item (Join-Path $tmp 'createWebApiProject-xplat-main') $installDir
+  Move-Item $extracted.FullName $installDir
+  Set-Content (Join-Path $installDir 'VERSION') $tag
 } finally {
   Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
