@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 
-namespace {{PROJECT}}.Logging;
+namespace {{NAMESPACE}}.Logging;
 
 public static class ConsoleLoggerExtensions
 {

@@ -1,4 +1,4 @@
-namespace {{PROJECT}}.Maps;
+namespace {{NAMESPACE}}.Maps;
 
 public record DummyDto(string Name, int Value);
 

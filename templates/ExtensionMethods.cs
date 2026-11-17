@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.SignalR;
 
-namespace {{PROJECT}};
+namespace {{NAMESPACE}};
 
 public static class ExtensionMethods
 {

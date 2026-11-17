@@ -1,4 +1,4 @@
-namespace {{PROJECT}}.Controllers;
+namespace {{NAMESPACE}}.Controllers;
 
 [ApiController]
 [Route("[controller]")]

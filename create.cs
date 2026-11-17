@@ -67,6 +67,9 @@ static class Generator
         var useWeb = type != "Min";
         var useMin = type != "Web";
         var project = solutionName;
+        // Wie "dotnet new": ungültige Zeichen (z. B. "-") im Namespace werden zu "_".
+        var ns = Regex.Replace(project, "[^A-Za-z0-9_]", "_");
+        if (char.IsDigit(ns[0])) ns = "_" + ns;
 
         Say(ConsoleColor.Magenta, $"createWebApiProject-xplat {ToolVersion} – {type} API");
 
@@ -139,11 +142,12 @@ static class Generator
         AddPackage(web, "Swashbuckle.AspNetCore", $"{sdkMajor}.2.3");
         AddPackage(web, "GrueneisR.RestClientGenerator", RestClientGeneratorVersion);
 
-        Write(web, "Dtos/ProgramYourDtosInThisFolder.cs", $"namespace {project}.Dtos;\n\npublic class DummyDtoClass {{ }}\n");
-        Write(web, "Services/ProgramYourServicesInThisFolder.cs", $"namespace {project}.Services;\n\npublic class DummyServiceClass {{ }}\n");
+        Write(web, "Dtos/ProgramYourDtosInThisFolder.cs", $"namespace {ns}.Dtos;\n\npublic class DummyDtoClass {{ }}\n");
+        Write(web, "Services/ProgramYourServicesInThisFolder.cs", $"namespace {ns}.Services;\n\npublic class DummyServiceClass {{ }}\n");
 
         // ---------------------------------------------------------------- Datenbank-Projekt
         var connectionString = "";
+        var dbSet = tableName ?? "";
         if (withDb)
         {
             var dbDir = Path.Combine(root, dbProject);
@@ -175,12 +179,12 @@ static class Generator
             {
                 Run(dbDir, "dotnet", "ef", "dbcontext", "scaffold", connectionString, provider,
                     "-c", $"{dbName}Context", "--no-onconfiguring", "-f");
-                if (isSqlite)
-                {
-                    // SQLite-Scaffolding erkennt Autoincrement nicht → sonst schlagen Inserts fehl.
-                    var ctx = Path.Combine(dbDir, $"{dbName}Context.cs");
-                    File.WriteAllText(ctx, File.ReadAllText(ctx).Replace("ValueGeneratedNever", "ValueGeneratedOnAdd"));
-                }
+                var ctx = Path.Combine(dbDir, $"{dbName}Context.cs");
+                var ctxCode = File.ReadAllText(ctx);
+                // SQLite-Scaffolding erkennt Autoincrement nicht → sonst schlagen Inserts fehl.
+                if (isSqlite) File.WriteAllText(ctx, ctxCode = ctxCode.Replace("ValueGeneratedNever", "ValueGeneratedOnAdd"));
+                dbSet = FindDbSet(ctxCode, tableName!);
+
             }
 
             Run(root, "dotnet", "sln", sln, "add", Path.Combine(dbDir, dbProject + ".csproj"));
@@ -199,7 +203,7 @@ static class Generator
             Run(root, "dotnet", "new", "wpf", "-n", wpf, "-o", wpf);
             var values = new Dictionary<string, string>
             {
-                ["NAMESPACE"] = wpf,
+                ["NAMESPACE"] = ns + "Wpf",
                 ["BASEURL"] = $"http://localhost:{HttpPort}/",
                 ["ROUTE"] = route,
             };
@@ -230,6 +234,7 @@ static class Generator
         var common = new Dictionary<string, string>
         {
             ["PROJECT"] = project,
+            ["NAMESPACE"] = ns,
             ["VERSION"] = ToolVersion,
             ["HTTP_PORT"] = HttpPort.ToString(),
             ["SERVICES"] = string.Join("\n", services),
@@ -237,6 +242,7 @@ static class Generator
             ["ENDPOINTS"] = string.Join("\n", endpoints),
             ["DBNAME"] = dbName,
             ["TABLE"] = tableName ?? "",
+            ["DBSET"] = dbSet,
         };
         Fill("Program.cs", Path.Combine(web, "Program.cs"), common);
         Fill("ExtensionMethods.cs", Path.Combine(web, "ExtensionMethods.cs"), common);
@@ -246,8 +252,8 @@ static class Generator
         if (useMin)
             Fill(withDb ? "DbTestMaps.cs" : "DummyMaps.cs", Path.Combine(web, "Maps", withDb ? "DbTestMaps.cs" : "DummyMaps.cs"), common);
 
-        var usings = new List<string> { "Microsoft.AspNetCore.Mvc", $"{project}.Dtos", $"{project}.Logging", $"{project}.Services" };
-        if (useMin) usings.Add($"{project}.Maps");
+        var usings = new List<string> { "Microsoft.AspNetCore.Mvc", $"{ns}.Dtos", $"{ns}.Logging", $"{ns}.Services" };
+        if (useMin) usings.Add($"{ns}.Maps");
         if (withDb) usings.AddRange(["Microsoft.EntityFrameworkCore", dbProject]);
         Write(web, "GlobalUsings.cs", string.Concat(usings.Select(u => $"global using {u};\n")));
 
@@ -362,6 +368,17 @@ static class Generator
         {
             return null;
         }
+    }
+
+    // EF benennt beim Scaffolden um (Tabelle "Album" → DbSet "Albums", "invoice_items" → "InvoiceItems").
+    // Gesucht wird das DbSet, dessen Name oder Entity-Typ ohne Sonderzeichen zum Tabellennamen passt.
+    static string FindDbSet(string contextCode, string table)
+    {
+        static string Key(string s) => Regex.Replace(s, "[^A-Za-z0-9]", "").ToLowerInvariant();
+        var sets = Regex.Matches(contextCode, @"DbSet<(\w+)>\s+(\w+)").Select(m => (Entity: m.Groups[1].Value, Name: m.Groups[2].Value)).ToList();
+        var hit = sets.FirstOrDefault(s => Key(s.Name) == Key(table) || Key(s.Entity) == Key(table));
+        return hit.Name ?? throw new ToolError(
+            $"Tabelle \"{table}\" wurde in der Datenbank nicht gefunden. Vorhanden: {string.Join(", ", sets.Select(s => s.Entity))}");
     }
 
     static bool IsNewer(string candidate, string current) =>
